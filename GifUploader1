@@ -1,0 +1,40 @@
+@@ -0,0 +1,39 @@
+// ==UserScript==
+// @name         מעלה הגיפים
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  מאפשר להעלות תמונות גיפ לפרופיל בקלות
+// @author       Super Oded
+// @match        https://www.fxp.co.il/member.php*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    function uploadImage(x) {
+        let body = new FormData;
+        body.append('fileToUpload',x);
+        return new Promise(e => fetch("/uploads/difup.php", { method: "POST", body }).then(x => x.json())
+        .then(x => e(x.image_link.replace("i.imagesup.co", "profile.fcdn.co.il"))));
+    }
+
+    function setProfileImage(x) {
+        let body = new FormData;
+        body.append("do", "update_profile_pic");
+        body.append("profile_url", x);
+        body.append("user_id", USER_ID_FXP);
+        body.append("securitytoken", SECURITYTOKEN);
+        return new Promise(e => fetch("/private_chat.php",{ method: "POST", body }).then(x => x.text()).then(x => "ok" == x && e()));
+    }
+
+    function openFileDialog() {
+        let x = document.createElement("input");
+        x.type = "file", x.accept = "image/gif", x.click(),
+        x.onchange = (x => uploadImage(x.srcElement.files[0]).then(x => setProfileImage(x).then(() => window.location.reload())))
+    }
+
+    $('#usermenu').append('<li><a href="javascript:void()"><img src="//static.fcdn.co.il/images_new/buttons/edit_40b.png" alt="העלאת גיפ לפרופיל" class="inlineimg initial loading" title="העלאת גיפ לפרופיל" data-was-processed="true"> העלאת גיפ לפרופיל</a></li>').click(function() {
+        "complete" == document.readyState && "guest" != SECURITYTOKEN ? openFileDialog() : alert("Please run this script on fxp.co.il (you must be logged in)")
+    })
+})();
